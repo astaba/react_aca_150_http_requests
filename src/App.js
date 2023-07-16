@@ -1,51 +1,57 @@
-import React, { useState } from "react";
+import React, { Fragment, useState } from "react";
 
 import MoviesList from "./components/MoviesList";
 import "./App.css";
 
-// const dummyMovies = [
-//   {
-//     id: 1,
-//     title: 'Some Dummy Movie',
-//     openingText: 'This is the opening text of the movie',
-//     releaseDate: '2021-05-18',
-//   },
-//   {
-//     id: 2,
-//     title: 'Some Dummy Movie 2',
-//     openingText: 'This is the second opening text of the movie',
-//     releaseDate: '2021-05-19',
-//   },
-// ];
-
 function App() {
   const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const fetchData = () => {
-    fetch("https://swapi.dev/api/films/")
-      .then((response) => response.json())
-      .then((data) => {
-        const transformedMovies = data.results.map(
-          ({
-            episode_id: id,
-            opening_crawl: openingText,
-            release_date: releaseDate,
-            title,
-          }) => ({ id, title, releaseDate, openingText })
-        );
-        setMovies(transformedMovies);
-      });
+  const fetchData = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const response = await fetch("https://swapi.dev/api/films/");
+      if (!response.ok) {
+        throw new Error(`${response.status}: Somthing went wrong!`);
+      }
+      const data = await response.json();
+      const transformedMovies = data.results.map(
+        ({
+          episode_id: id,
+          opening_crawl: openingText,
+          release_date: releaseDate,
+          title,
+        }) => ({ id, title, releaseDate, openingText })
+      );
+      setMovies(transformedMovies);
+    } catch (err) {
+      console.log(err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  let indicatorUI = null;
+  if (movies.length === 0 && !isLoading && !error) {
+    indicatorUI = <h4>No movies yet</h4>;
+  } else if (isLoading) {
+    indicatorUI = <h4>Loading movies...</h4>;
+  } else if (!isLoading && error) {
+    indicatorUI = <h4>{error}</h4>;
+  }
+
   return (
-    <React.Fragment>
+    <Fragment>
       <section>
         <button onClick={fetchData}>Fetch Movies</button>
       </section>
       <section>
-        <MoviesList movies={movies} />
+        {indicatorUI || <MoviesList movies={movies} />}
       </section>
-    </React.Fragment>
+    </Fragment>
   );
 }
 
