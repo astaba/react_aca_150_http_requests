@@ -1,6 +1,7 @@
 import React, { Fragment, useCallback, useEffect, useState } from "react";
 
 import MoviesList from "./components/MoviesList";
+import AddMovie from "./components/AddMovie";
 import "./App.css";
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
     setIsLoading(true);
     try {
       const response = await fetch("https://swapi.dev/api/films/");
+      // const response = await fetch("https://academind-react-215-default-rtdb.europe-west1.firebasedatabase.app/movie.json");
       if (!response.ok) {
         throw new Error(`${response.status}: Somthing went wrong!`);
       }
@@ -38,6 +40,10 @@ function App() {
     fetchData();
   }, [fetchData]);
 
+  const handleAddMovie = (movie) => {
+    console.log(movie);
+  };
+
   let indicatorUI = null;
   if (movies.length === 0 && !isLoading && !error) {
     indicatorUI = <h4>No movies yet</h4>;
@@ -49,6 +55,9 @@ function App() {
 
   return (
     <Fragment>
+      <section>
+        <AddMovie onAddMovie={handleAddMovie} />
+      </section>
       <section>
         <button onClick={fetchData}>Fetch Movies</button>
       </section>
