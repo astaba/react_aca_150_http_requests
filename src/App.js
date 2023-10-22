@@ -5,7 +5,7 @@ import AddMovie from "./components/AddMovie";
 import "./App.css";
 
 function App() {
-  const [movies, setMovies] = useState([]);
+  const [movieData, setMovieDatas] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -13,21 +13,26 @@ function App() {
     setError(null);
     setIsLoading(true);
     try {
-      const response = await fetch("https://swapi.dev/api/films/");
-      // const response = await fetch("https://academind-react-215-default-rtdb.europe-west1.firebasedatabase.app/movie.json");
+      const response = await fetch(
+        "https://academind-react-215-default-rtdb.europe-west1.firebasedatabase.app/movie.json"
+      );
+
       if (!response.ok) {
-        throw new Error(`${response.status}: Somthing went wrong!`);
+        const data = await response.json()
+        throw new Error(`${response.status}: ${data.error}`);
       }
       const data = await response.json();
-      const transformedMovies = data.results.map(
-        ({
-          episode_id: id,
-          opening_crawl: openingText,
-          release_date: releaseDate,
-          title,
-        }) => ({ id, title, releaseDate, openingText })
-      );
-      setMovies(transformedMovies);
+         console.log(data);
+      const fetchedMovie = [];
+      for (let key in data) {
+        const singleMovie = {
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate,
+          title: data[key].title,
+        };
+        fetchedMovie.push(singleMovie);
+      }
+      setMovieDatas(fetchedMovie);
     } catch (err) {
       console.log(err);
       setError(err.message);
@@ -40,12 +45,22 @@ function App() {
     fetchData();
   }, [fetchData]);
 
-  const handleAddMovie = (movie) => {
-    console.log(movie);
+  const handleAddMovie = async (movie) => {
+    const response = await fetch(
+      "https://academind-react-215-default-rtdb.europe-west1.firebasedatabase.app/movie.json",
+      {
+        method: "POST",
+        body: JSON.stringify(movie),
+        header: "Content-Type: application/json",
+      }
+    );
+    const data = await response.json();
+    console.log(data);
+
   };
 
   let indicatorUI = null;
-  if (movies.length === 0 && !isLoading && !error) {
+  if (movieData.length === 0 && !isLoading && !error) {
     indicatorUI = <h4>No movies yet</h4>;
   } else if (isLoading) {
     indicatorUI = <h4>Loading movies...</h4>;
@@ -61,9 +76,7 @@ function App() {
       <section>
         <button onClick={fetchData}>Fetch Movies</button>
       </section>
-      <section>
-        {indicatorUI || <MoviesList movies={movies} />}
-      </section>
+      <section>{indicatorUI || <MoviesList movies={movieData} />}</section>
     </Fragment>
   );
 }
